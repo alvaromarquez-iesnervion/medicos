@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from pwdlib import PasswordHash
 from datetime import datetime, timedelta, timezone
 import jwt
+from jwt import PyJWTError
 
 router = APIRouter(
     prefix="",
@@ -86,7 +87,7 @@ async def authentication(token:str = Depends(oauth2)):
         if username is None:
             raise HTTPException(status_code=401, detail="Invalid autenitcation credentials", headers={"WWW-Authenticate": "Bearer"})
         
-    except jwt.PyJWTError:
+    except PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid autenitcation credentials", headers={"WWW-Authenticate": "Bearer "})
 
     user=User(**users_db.get(username))
