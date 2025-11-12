@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security.oauth2 import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from pwdlib import PasswordHash
 from datetime import datetime, timedelta, timezone
 import jwt
-
 
 router = APIRouter(
     prefix="",
@@ -14,6 +13,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1
 SECRET_KEY = "tkqVtL5cZk_vyWK5plrqHJn4zFm8lqhrnCNvEwbYDX0tljwSXe5eAtzd4oo_Ryxb"
 password_hash = PasswordHash.recommended()
+
 oauth2=OAuth2PasswordBearer(tokenUrl="login")
 
 class User(BaseModel):
@@ -78,3 +78,18 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
             raise HTTPException(status_code=400, detail="error en la autenticacion")
     raise HTTPException(status_code=401, detail="Incorrect username or password")
 
+
+
+async def authentication(token:str = Depends(oauth2)):
+    try:
+        username=jwt.decode(token, SECRET_KEY, algorithm=ALGORITHM).get("sub")
+        if username is None:
+            raise HTTPException(status_code=401, detail="Invalid autenitcation credentials", headers={"WWW-Authenticate": "Bearer"})
+        
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Invalid autenitcation credentials", headers={"WWW-Authenticate": "Bearer "})
+
+    user=User(**users_db.get(username))
+    if user.disabled:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return user
