@@ -27,28 +27,19 @@ class UserDB(User):
     password: str
 
 users_db = {
-    "johndoe": {
-        "username": "johndoe",
-        "full_name": "John Doe",
-        "email": "Jhon@gmail.com",
-        "disabled": False,
-        "password": "12345"
-    },
-    "alice": {
-        "username": "alice",
-        "full_name": "Alice Wonderson",
-        "email": "alice@gmail.com",
-        "disabled": False,
-        "password": "67890"
-    },
-    "alvaro":{
-        
+    "alvaro":{       
         "username": "alvaro",
         "full_name": "alvaro marquez",
         "email": "alvaro@gmail.com",
         "disabled": False,
         "password": "$argon2id$v=19$m=65536,t=3,p=4$VFmBZprJLIXw4twGRmQBXw$xmmkghef5yyEQipICyeNrSYo/XONTx8+fNG3g+WpMzA"
-        
+    },
+    "admin":{
+    "username": "admin",
+    "full_name": "admin",
+    "email": "admin@gmail.com",
+    "disabled": False,
+    "password": "$argon2id$v=19$m=65536,t=3,p=4$5rhFC4ptXIzpvNMKYfqm4g$DJri8nhItpFJttvHi0IXfthnDxUxJNlKBP9+/epo5yM"
     }
 }
 
@@ -60,9 +51,6 @@ def register(usuario: UserDB):
         users_db[usuario.username] = usuario
         return usuario
     raise HTTPException(status_code=400,detail="El usuario ya existe")
-    
-
-@router.post("/login")
 
 @router.post("/login")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -81,9 +69,12 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 
 
+
+
+
 async def authentication(token:str = Depends(oauth2)):
     try:
-        username=jwt.decode(token, SECRET_KEY, algorithm=ALGORITHM).get("sub")
+        username=jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM).get("sub")
         if username is None:
             raise HTTPException(status_code=401, detail="Invalid autenitcation credentials", headers={"WWW-Authenticate": "Bearer"})
         
@@ -93,4 +84,9 @@ async def authentication(token:str = Depends(oauth2)):
     user=User(**users_db.get(username))
     if user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
+    return user
+
+
+@router.get("/auth/me")
+async def me(user: User = Depends(authentication)):
     return user

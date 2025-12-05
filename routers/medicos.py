@@ -29,19 +29,7 @@ medicos_list = [
 ]
     
 
-@router.get("/", response_class=HTMLResponse)
-def root():
-    return """
-        <html>
-            <head>
-                <title>Médicos API</title>
-            </head>
-            <body>
-                <h1>Bienvenido a la API de Médicos </h1>
-                <p><a href="/medicos">Ver lista de médicos</a></p>
-            </body>
-        </html>
-    """
+
 
 
 @router.get("/")
